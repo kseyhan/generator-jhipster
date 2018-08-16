@@ -16,37 +16,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 const chalk = require('chalk');
+
 const BaseGenerator = require('../generator-base');
 const statistics = require('../statistics');
 
 module.exports = class extends BaseGenerator {
-    constructor(args, opts) {
-        super(args, opts);
-        this.baseName = this.config.get('baseName');
-        this.argument('jdlFile', { type: String, required: false, defaults: `${this.baseName}.jh` });
-        this.jdlFile = this.options.jdlFile;
-    }
-
-    get default() {
+    get initializing() {
         return {
-            insight() {
-                statistics.sendSubGenEvent('generator', 'export-jdl');
-            },
-
-            parseJson() {
-                this.log('Parsing entities from .jhipster dir...');
-                this.jdl = this.generateJDLFromEntities();
+            unlink() {
+                const done = this.async();
+                if (statistics.isLinked) {
+                    this.log(`Generator was linked with clientId: ${statistics.clientId}`);
+                    statistics.deleteConfig('clientId');
+                    statistics.deleteConfig('isLinked');
+                    this.log(chalk.green('Your generator has been successfully unlinked from JHipster Online'));
+                } else {
+                    this.log('Your generator is currently not linked to JHipster Online');
+                }
+                done();
             }
         };
-    }
-
-    writing() {
-        const content = `// JDL definition for application '${this.baseName}' generated with command 'jhipster export-jdl'\n\n${this.jdl.toString()}`;
-        this.fs.write(this.jdlFile, content);
-    }
-
-    end() {
-        this.log(chalk.green.bold('\nEntities successfully exported to JDL file\n'));
     }
 };
